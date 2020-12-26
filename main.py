@@ -13,7 +13,7 @@ def read_game():
         board.push(move)
         print(board)
 
-def play_game()
+def play_game():
     board = chess.Board()
 
     for i in range(50):
@@ -51,4 +51,4 @@ def play_game()
         print(board)
         print('----------------')
 
-play_game()
+read_game()
