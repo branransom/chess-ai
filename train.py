@@ -4,13 +4,9 @@ import numpy as np
 import tensorflow as tf
 import os
 import time
+import sys
 from sklearn.model_selection import train_test_split
 from serialize import serialize
-
-def read_model():
-    model = tf.keras.models.load_model('model')
-    model.summary()
-    return model
 
 def read_game(file):
     print(f'Reading games from {file}...')
@@ -54,12 +50,12 @@ def read_game(file):
 
 
 def read_games():
-    X = np.empty([1, 7, 8, 8])
-    y = np.empty([1, 7, 8, 8])
+    X = None
+    y = None
 
     directory = 'data'
     for filename in os.listdir(directory):
-        if filename.endswith(".pgn"):
+        if filename.endswith("Fischer.pgn"):
             tic = time.perf_counter()
             X_pgn, y_pgn = read_game(os.path.join(directory, filename))
             X = np.concatenate(( X, X_pgn ), axis=0) if X is not None else X_pgn
@@ -71,11 +67,14 @@ def read_games():
 
     return X, y
 
+# this did not perform very well... but could I use something like this to optimize the evaluation fn later?
 def train():
     X, y = read_games()
     X = np.moveaxis(X, 1, -1) # workaround for error, where tensorflow is expecting channels column last
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+
+    print(X_train.shape)
 
     cnn = tf.keras.models.Sequential()
 
@@ -85,12 +84,12 @@ def train():
 
     # Pooling
     print('Pooling')
-    cnn.add(tf.keras.layers.MaxPool2D(pool_size=2, strides=2, padding='same'))
+    cnn.add(tf.keras.layers.MaxPool2D(pool_size=2, strides=2))
 
     # Second convolution layer
     print('Second convolution layer')
     cnn.add(tf.keras.layers.Conv2D(filters=32, kernel_size=3, activation='relu'))
-    cnn.add(tf.keras.layers.MaxPool2D(pool_size=2, strides=2))
+    cnn.add(tf.keras.layers.MaxPool2D(pool_size=2, strides=2, padding="same"))
 
     # Flattening
     print('Flattening')
@@ -102,7 +101,7 @@ def train():
 
     # Output layer
     print('Output layer')
-    cnn.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
+    cnn.add(tf.keras.layers.Dense(units=1, activation='softmax'))
 
     # Compiling the CNN
     print('Compiling')
@@ -110,16 +109,19 @@ def train():
 
     # Training
     print('Training')
-    cnn.fit(x=X_train, y=y_train, validation_split=0.2, epochs = 35)
+    cnn.fit(x=X_train, y=y_train, validation_split=0.2, epochs = 3)
 
     cnn.save('model')
     print("Saved model to disk")
 
-    # example_board = X_test
-    # result = y_test
+    example_board = X_test
+    result = y_test
 
-    # prediction = cnn.predict(example_board)
+    prediction = cnn.predict(example_board)
 
-    # print(prediction)
-    # print(result)
+    np.set_printoptions(threshold=20)
+    print(np.array(prediction))
+    print(np.array(result))
+
+train()
 

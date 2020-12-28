@@ -1,9 +1,12 @@
 import sys
 import chess
 import argparse
-from move_generator import next_move
-from train import read_model
+from evaluate import next_move
 
+def read_model():
+    model = tf.keras.models.load_model('model')
+    model.summary()
+    return model
 
 def talk():
     '''
@@ -12,7 +15,7 @@ def talk():
     '''
     board = chess.Board()
     depth = get_depth()
-    model = read_model()
+    # model = read_model()
 
     while True:
         msg = input()
@@ -21,10 +24,10 @@ def talk():
         if (msg == 'quit'):
             break
 
-        command(depth, board, msg, model)
+        command(board, depth, msg)
 
 
-def command(depth, board, msg, model):
+def command(board, depth, msg):
     '''
     Accept UCI commands and respond.
     The board state is also updated.
@@ -56,7 +59,7 @@ def command(depth, board, msg, model):
         return
 
     if msg[0:2] == 'go':
-        move = next_move(depth, board, model)
+        move = next_move(board, depth)
         print(f"bestmove {move}")
         return
 

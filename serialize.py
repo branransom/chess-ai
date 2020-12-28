@@ -30,7 +30,6 @@ def initialize():
 def serialize(board):
     state = initialize()
 
-    # squares starting in bottom right corner?
     for square in chess.SQUARES:
         color = board.color_at(square)
 
