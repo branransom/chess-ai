@@ -1,13 +1,9 @@
 import sys
 import chess
 import argparse
-from evaluate import next_move
+from move_generator import next_move
 
-def read_model():
-    model = tf.keras.models.load_model('model')
-    model.summary()
-    return model
-
+# UCI gist: https://gist.github.com/aliostad/f4470274f39d29b788c1b09519e67372
 def talk():
     '''
     The main input/output loop.
@@ -68,8 +64,8 @@ def get_depth():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--depth',
-        default=3,
-        help='provide an integer (default: 3)'
+        default=2,
+        help='provide an integer (default: 2)'
     )
     args = parser.parse_args()
     return int(args.depth)

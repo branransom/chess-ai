@@ -1,7 +1,7 @@
 import chess
-import math
-import time
+import functools
 import numpy as np
+import chess.polyglot
 
 pawn_position_values = [
      0,  0,  0,  0,  0,  0,  0,  0,
@@ -93,8 +93,7 @@ color_multiplier = {
     chess.BLACK: -1
 }
 
-count = 0
-
+@functools.lru_cache(maxsize=1000)
 def get_position_value(piece, color, square):
     if (color == chess.WHITE):
         return position_values[piece][square]
@@ -114,67 +113,17 @@ def evaluate(board):
             continue
 
         piece = board.piece_at(square).piece_type
-        value += get_piece_value(piece) * color_multiplier[color]
-        value += get_position_value(piece, color, square) * color_multiplier[color]
-        
+        inc_value = (get_piece_value(piece) + get_position_value(piece, color, square)) * color_multiplier[color]
+        value += inc_value
+
     return value
 
-def call_counter(func):
-    def helper(*args, **kwargs):
-        helper.calls += 1
-        return func(*args, **kwargs)
-    helper.calls = 0
-    helper.__name__= func.__name__
+def lost_value(board, move):
+    try:
+        from_piece = board.piece_at(move.from_square).piece_type
+        to_piece = board.piece_at(move.to_square).piece_type
 
-    return helper
-
-# Minimax algorithm w/ alpha beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
-# what happens if maximizing player is black? account for this in the evaluate function
-@call_counter
-def minimax(board, depth, alpha, beta, maximizing_player):
-    if depth == 0 or board.is_game_over():
-        return evaluate(board)
-
-    legal_moves = board.legal_moves
-
-    if maximizing_player:
-        max_eval = -math.inf
-        for move in legal_moves:
-            board.push(move)
-            move_eval = minimax(board, depth -1, alpha, beta, not maximizing_player)
-            max_eval = max(max_eval, move_eval)
-            alpha = max(alpha, move_eval)
-            if beta <= alpha:
-                break
-            board.pop()
-        return max_eval
-    else:
-        min_eval = math.inf
-        for move in legal_moves:
-            board.push(move)
-            move_eval = minimax(board, depth -1, alpha, beta, maximizing_player)
-            min_eval = min(min_eval, move_eval)
-            beta = min(beta, move_eval)
-            if beta <= alpha:
-                break
-            board.pop()
-        return min_eval
-
-def next_move(board, depth):
-    best_move_value = -math.inf
-    best_move = None
-
-    legal_moves = board.legal_moves
-    tic = time.perf_counter()
-    for move in legal_moves:
-        board.push(move)
-        move_value = minimax(board, depth - 1, -math.inf, math.inf, False)
-        board.pop()
-        if move_value >= best_move_value:
-            best_move_value = move_value
-            best_move = move
-
-    toc = time.perf_counter()
-    print(f"Searched {minimax.calls} moves, and found best move value: {best_move_value} in {toc - tic:0.4f} seconds")
-
-    return best_move
+        return piece_values[to_piece] - piece_values[from_piece]
+    except:
+        # en passants and checks will throw an exception, since they do not have a capturing move
+        return 0
