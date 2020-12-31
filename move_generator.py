@@ -3,6 +3,8 @@ import time
 import logging
 from evaluate import evaluate, evaluate_move_value
 
+logging.basicConfig(filename='output.log', level=logging.DEBUG)
+
 def call_counter(func):
     def helper(*args, **kwargs):
         helper.calls += 1
@@ -90,10 +92,77 @@ def quiesce(board, depth, alpha, beta, maximizing_player):
                 break
         return beta
 
+@call_counter
+# each side should have the option of making no move at all
+def smart_quiescence(board, depth, alpha, beta, maximizing_player):
+    if board.is_variant_win() and maximizing_player:
+        # black wins (white made prior move)
+        return -math.inf
+    elif board.is_variant_loss() and maximizing_player:
+        # white wins (black made prior move)
+        return math.inf
+    elif board.is_variant_win() and not maximizing_player:
+        # white wins (black made prior move)
+        return math.inf
+    elif board.is_variant_loss() and not maximizing_player:
+        # black wins (white made prior move)
+        return -math.inf
+    elif board.is_variant_draw():
+        return 0
+
+    stand_pat = evaluate(board)
+
+    if depth == 0:
+        return stand_pat
+
+    if maximizing_player:
+        if stand_pat >= beta:
+            return beta
+        if alpha < stand_pat:
+            alpha = stand_pat
+    else:
+        if stand_pat <= alpha:
+            return alpha
+        if beta > stand_pat:
+            beta = stand_pat
+
+    moves = get_moves_to_dequiet(board)
+
+    if not moves:
+        return evaluate(board)
+    
+    if maximizing_player:
+        for move in moves:
+            board.push(move)
+            score = smart_quiescence(board, depth - 1, alpha, beta, not maximizing_player)
+            board.pop()
+
+            if score >= beta:
+                return beta
+            if beta <= alpha:
+                break
+
+            alpha = max(alpha, score)
+        return alpha
+    else:
+        for move in moves:
+            board.push(move)
+            score = smart_quiescence(board, depth - 1, alpha, beta, not maximizing_player)
+            board.pop()
+
+            # if score >= beta:
+            #     return beta
+            if score <= alpha:
+                return alpha
+            if beta <= alpha:
+                break
+            beta = min(beta, score)
+        return beta
+
 # Minimax algorithm w/ alpha beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
 # what happens if maximizing player is black? account for this in the evaluate function
 @call_counter
-def minimax(board, depth, alpha, beta, maximizing_player):
+def minimax(board, depth, alpha, beta, maximizing_player, quiesce):
     if board.is_variant_win() and maximizing_player:
         # black wins (white made prior move)
         return -math.inf
@@ -114,29 +183,32 @@ def minimax(board, depth, alpha, beta, maximizing_player):
         return evaluate(board)
 
     if depth == 0:
-        # the hand-off seems incorrect...
-        return quiesce(board, 3, alpha, beta, maximizing_player)
+        return smart_quiescence(board, 5, -math.inf, math.inf, maximizing_player)
 
-    prioritized_moves = prioritize_legal_moves(board)
+    prioritized_moves = prioritize_legal_moves(board) if not quiesce else get_moves_to_dequiet(board)
 
     if maximizing_player:
+        max_eval = -math.inf
         for move in prioritized_moves:
             board.push(move)
-            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player)
+            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player, quiesce)
             alpha = max(alpha, move_eval)
+            max_eval = max(max_eval, move_eval)
             board.pop()
             if beta <= alpha:
                 break
-        return alpha
+        return max_eval
     else:
+        min_eval = math.inf
         for move in prioritized_moves:
             board.push(move)
-            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player)
+            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player, quiesce)
             beta = min(beta, move_eval)
+            min_eval = min(min_eval, move_eval)
             board.pop()
             if beta <= alpha:
                 break
-        return beta
+        return min_eval
 
 # input list to split, function to group by
 def groupby(list, fn):
@@ -153,7 +225,7 @@ def groupby(list, fn):
 
 def evaluate_move(board, move, depth, maximizing_player):
     board.push(move)
-    move_value = minimax(board, depth - 1, -math.inf, math.inf, not maximizing_player)
+    move_value = minimax(board, depth - 1, -math.inf, math.inf, not maximizing_player, False)
     board.pop()
     return move_value
 
