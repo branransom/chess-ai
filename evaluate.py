@@ -104,26 +104,65 @@ def get_piece_value(piece):
     return piece_values[piece]
 
 def evaluate(board):
-    value = 0
+    board_value = 0
+
+    # board_values = []
 
     for square in chess.SQUARES:
-        color = board.color_at(square)
+        piece = board.piece_at(square)
 
-        if color is None:
+        if not piece:
+            # board_values.append(0)
             continue
 
-        piece = board.piece_at(square).piece_type
-        inc_value = (get_piece_value(piece) + get_position_value(piece, color, square)) * color_multiplier[color]
-        value += inc_value
+        color = piece.color
+        piece_type = piece.piece_type
+
+        value = get_piece_value(piece_type) + get_position_value(piece_type, color, square)
+
+        board_value += value * color_multiplier[color]
+        # board_values.append(value)
+
+    # print(board)
+    # print(np.flip(np.array(board_values).reshape(8, 8), 0))
+    # print(f"board_value={board_value}")
+    # print('-----------')
+
+    return board_value
+
+# Assume the move is being evaluated before it's made
+# How should checks be valued?
+def evaluate_move_value(board, move):
+    # assume promotion will be queen
+    if move.promotion is not None:
+        return piece_values[chess.QUEEN]
+
+    value = 0
+
+    if board.is_capture(move):
+        value += capture_value(board, move)
+
+    from_square = move.from_square
+    to_square = move.to_square
+    piece_type = board.piece_at(from_square).piece_type
+    color = board.turn
+
+    value += position_value_change(piece_type, color, from_square, to_square)
 
     return value
 
-def lost_value(board, move):
-    try:
-        from_piece = board.piece_at(move.from_square).piece_type
-        to_piece = board.piece_at(move.to_square).piece_type
+def position_value_change(piece, color, from_square, to_square):
+    from_value = get_position_value(piece, color, from_square)
+    to_value = get_position_value(piece, color, to_square)
 
-        return piece_values[to_piece] - piece_values[from_piece]
-    except:
-        # en passants and checks will throw an exception, since they do not have a capturing move
-        return 0
+    return to_value - from_value
+
+# Lesser valued pieces taking higher valued pieces are the best
+def capture_value(board, move):
+    if board.is_en_passant(move):
+        return piece_values[chess.PAWN]
+
+    from_piece = board.piece_at(move.from_square).piece_type
+    to_piece = board.piece_at(move.to_square).piece_type
+
+    return piece_values[to_piece] - piece_values[from_piece]

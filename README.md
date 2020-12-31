@@ -11,6 +11,10 @@ pip3 install pyinstaller
 python3 -m PyInstaller main.py
 ```
 
+## Debugging
+
+Debugging the decision tree is difficult, especially at greater depths. The engine seems to make good decisions for a while, and then out of nowhere, it sacrifices a piece for no reason. I need to create a way to visualize the decision making process for specific moves...
+
 ## Running on lichess
 
 This project provides a bridge between a chess bot and lichess: https://github.com/ShailChoksi/lichess-bot

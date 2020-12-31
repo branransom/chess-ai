@@ -1,7 +1,9 @@
 import sys
 import chess
 import argparse
+import time
 from move_generator import next_move
+from evaluate import evaluate
 
 # UCI gist: https://gist.github.com/aliostad/f4470274f39d29b788c1b09519e67372
 def talk():
@@ -59,13 +61,35 @@ def command(board, depth, msg):
         print(f"bestmove {move}")
         return
 
+    if msg == 'test':
+        move = next_move(chess.Board('rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 1 1'), depth)
+        print(f"{move}")
+        return
+
+    if msg == 'self':
+        board = chess.Board('rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 1 1')
+        while not board.is_game_over():
+            move = next_move(board, depth)
+            board.push(move)
+            print(board)
+            print(f"{move}")
+            print('-----------------')
+            time.sleep(5)
+        return
+
+    if msg == 'eval':
+        board = chess.Board('r1bqkbnr/ppp1ppp1/2np4/7p/3PPB2/P1N2N1P/1PP2PP1/R2QKB1R w KQkq - 0 1')
+        print(evaluate(board))
+        return
+
+
 
 def get_depth():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--depth',
-        default=2,
-        help='provide an integer (default: 2)'
+        default=3,
+        help='provide an integer (default: 3)'
     )
     args = parser.parse_args()
     return int(args.depth)
