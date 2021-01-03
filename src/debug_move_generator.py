@@ -292,7 +292,7 @@ def next_move(board, depth):
             best_move = move
 
     # tree.show()
-    tree.to_graphviz(filename='graphviz', shape=u'circle', graph=u'digraph')
+    tree.to_graphviz(filename='decision_tree', shape=u'circle', graph=u'digraph')
 
     toc = time.perf_counter()
     print(f"Searched {minimax.calls} minimax moves and {quiesce.calls} quiesce moves, and found best move value: {best_move_value} in {toc - tic:0.4f} seconds")

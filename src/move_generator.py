@@ -1,6 +1,5 @@
 import math
 import time
-import logging
 from evaluate import evaluate, evaluate_move_value
 
 def call_counter(func):
@@ -17,7 +16,7 @@ def timer(func):
         tic = time.perf_counter()
         result = func(*args, **kwargs)
         toc = time.perf_counter()
-        logging.debug(f"{func.__name__} took {toc - tic:0.4f} seconds to execute")
+        print(f"{func.__name__} took {toc - tic:0.4f} seconds to execute")
         return result
     helper.__name__= func.__name__
 
@@ -118,12 +117,6 @@ def minimax(board, depth, alpha, beta, maximizing_player, quiesce):
         return math.inf
     elif board.is_stalemate():
         return 0
-    # elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition() or board.is_seventyfive_moves():
-    #     return 0
-
-    # if board.is_game_over():
-    #     # does the king get removed from the board in checkmate?
-    #     return evaluate(board)
 
     if depth == 0:
         return quiescence(board, 5, -math.inf, math.inf, maximizing_player)
@@ -194,17 +187,17 @@ def next_move(board, depth):
 
     for move in prioritized_moves:
         move_value = evaluate_move(board, move, depth, color)
-        logging.info(f"move={move}; move_value={move_value}")
+        print(f"move={move}; move_value={move_value}")
 
-        if color and move_value > best_move_value:
+        if color and move_value >= best_move_value:
             best_move_value = move_value
             best_move = move
-        elif not color and move_value < best_move_value:
+        elif not color and move_value <= best_move_value:
             best_move_value = move_value
             best_move = move
 
     toc = time.perf_counter()
-    logging.info(f"Searched {minimax.calls} minimax moves and {quiescence.calls} quiesce moves, and found best move value: {best_move_value} in {toc - tic:0.4f} seconds")
+    print(f"Searched {minimax.calls} minimax moves and {quiescence.calls} quiesce moves, and found best move value: {best_move_value} in {toc - tic:0.4f} seconds")
 
     return best_move
 
