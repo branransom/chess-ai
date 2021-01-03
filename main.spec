@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['main.py'],
+a = Analysis(['src/main.py'],
              pathex=['/Users/brandonransom/dev/workspace/chess/chess-ai'],
              binaries=[],
              datas=[],
