@@ -1,6 +1,8 @@
 import math
 import time
-from evaluate import evaluate, evaluate_move_value
+import chess
+from collections import defaultdict
+from evaluate import evaluate, evaluate_move_value, piece_values
 
 def call_counter(func):
     def helper(*args, **kwargs):
@@ -25,22 +27,40 @@ def timer(func):
 def sort_moves_by_value(board, moves):
     return sorted(moves, key=lambda move: evaluate_move_value(board, move), reverse=True)
 
+def determine_victim_and_aggressor_types(board, move):
+    if board.is_en_passant(move):
+        return [move, piece_values[chess.PAWN], piece_values[chess.PAWN]]
+
+    aggressor = board.piece_at(move.from_square).piece_type
+    victim = board.piece_at(move.to_square).piece_type
+
+    return [move, piece_values[victim], piece_values[aggressor]]
+
+# Most valuable victim, lease valuable aggressor: https://www.chessprogramming.org/MVV-LVA
+def sort_mvv_lva(board, moves):
+    victims_and_aggressors = [determine_victim_and_aggressor_types(board, move) for move in moves]
+    # move is index 0, victim values are index 1, aggressor values are index 2
+    return list(map(lambda x: x[0], sorted(victims_and_aggressors, key=lambda x: (-x[1], x[2]))))
+
 def prioritize_legal_moves(board):
     legal_moves = board.legal_moves
 
     grouped_moves = groupby(legal_moves, compose_move_type(board))
-    sorted_nonquiet_moves = sort_moves_by_value(board, grouped_moves['nonquiet'])
+    sorted_check_moves = sort_moves_by_value(board, grouped_moves['check'])
+    sorted_capture_moves = sort_mvv_lva(board, grouped_moves['capture'])
     sorted_quiet_moves = sort_moves_by_value(board, grouped_moves['quiet'])
 
     # nonquiet moves should be searched first, since they are most likely to increase value
-    return sorted_nonquiet_moves + sorted_quiet_moves
+    return sorted_check_moves + sorted_capture_moves + sorted_quiet_moves
 
-# should checks be handled differently than captures? the bot is pretty bad at checkmating
-# how to handle en passant?
 def get_moves_to_dequiet(board):
-    moves_to_dequiet = list(filter(lambda move: board.is_capture(move) or board.gives_check(move), board.legal_moves))
+    legal_moves = board.legal_moves
+    grouped_moves = groupby(legal_moves, compose_move_type(board))
 
-    return sort_moves_by_value(board, moves_to_dequiet)
+    sorted_check_moves = sort_moves_by_value(board, grouped_moves['check'])
+    sorted_capture_moves = sort_mvv_lva(board, grouped_moves['capture'])
+
+    return sorted_check_moves + sorted_capture_moves
 
 @call_counter
 # https://www.chessprogramming.org/Quiescence_Search
@@ -106,9 +126,8 @@ def quiescence(board, depth, alpha, beta, maximizing_player):
         return beta
 
 # Minimax algorithm w/ alpha beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
-# what happens if maximizing player is black? account for this in the evaluate function
 @call_counter
-def minimax(board, depth, alpha, beta, maximizing_player, quiesce):
+def minimax(board, depth, alpha, beta, maximizing_player):
     if maximizing_player and board.is_checkmate():
         # black wins (white made prior move)
         return -math.inf
@@ -121,13 +140,13 @@ def minimax(board, depth, alpha, beta, maximizing_player, quiesce):
     if depth == 0:
         return quiescence(board, 5, -math.inf, math.inf, maximizing_player)
 
-    prioritized_moves = prioritize_legal_moves(board) if not quiesce else get_moves_to_dequiet(board)
+    prioritized_moves = prioritize_legal_moves(board)
 
     if maximizing_player:
         max_eval = -math.inf
         for move in prioritized_moves:
             board.push(move)
-            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player, quiesce)
+            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player)
             alpha = max(alpha, move_eval)
             max_eval = max(max_eval, move_eval)
             board.pop()
@@ -138,7 +157,7 @@ def minimax(board, depth, alpha, beta, maximizing_player, quiesce):
         min_eval = math.inf
         for move in prioritized_moves:
             board.push(move)
-            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player, quiesce)
+            move_eval = minimax(board, depth - 1, alpha, beta, not maximizing_player)
             beta = min(beta, move_eval)
             min_eval = min(min_eval, move_eval)
             board.pop()
@@ -147,13 +166,10 @@ def minimax(board, depth, alpha, beta, maximizing_player, quiesce):
         return min_eval
 
 # input list to split, function to group by
-def groupby(list, fn):
-    grouped_list = {
-        'nonquiet': [],
-        'quiet': []
-    }
+def groupby(list_to_group, fn):
+    grouped_list = defaultdict(list)
 
-    for i in list:
+    for i in list_to_group:
         key = fn(i)
         grouped_list[key].append(i)
 
@@ -161,14 +177,16 @@ def groupby(list, fn):
 
 def evaluate_move(board, move, depth, maximizing_player):
     board.push(move)
-    move_value = minimax(board, depth - 1, -math.inf, math.inf, not maximizing_player, False)
+    move_value = minimax(board, depth - 1, -math.inf, math.inf, not maximizing_player)
     board.pop()
     return move_value
 
 def compose_move_type(board):
     def determine_move_type(move):
-        if board.is_capture(move) or board.gives_check(move):
-            return 'nonquiet'
+        if board.gives_check(move):
+            return 'check'
+        elif board.is_capture(move):
+            return 'capture'
         else:
             return 'quiet'
 

@@ -100,9 +100,6 @@ def get_position_value(piece, color, square):
     else:
         return position_values[piece][::-1][square]
 
-def get_piece_value(piece):
-    return piece_values[piece]
-
 def evaluate(board):
     board_value = 0
 
@@ -118,7 +115,7 @@ def evaluate(board):
         color = piece.color
         piece_type = piece.piece_type
 
-        value = get_piece_value(piece_type) + get_position_value(piece_type, color, square)
+        value = piece_values[piece_type] + get_position_value(piece_type, color, square)
 
         board_value += value * color_multiplier[color]
         # board_values.append(value)
