@@ -93,23 +93,24 @@ color_multiplier = {
     chess.BLACK: -1
 }
 
+@functools.lru_cache(maxsize=12)
+def get_position_values_for_color(piece, color):
+    if (color == chess.WHITE):
+        return position_values[piece]
+    else:
+        return position_values[piece][::-1]
+
 @functools.lru_cache(maxsize=1000)
 def get_position_value(piece, color, square):
-    if (color == chess.WHITE):
-        return position_values[piece][square]
-    else:
-        return position_values[piece][::-1][square]
+    return get_position_values_for_color(piece, color)[square]
 
 def evaluate(board):
     board_value = 0
-
-    # board_values = []
 
     for square in chess.SQUARES:
         piece = board.piece_at(square)
 
         if not piece:
-            # board_values.append(0)
             continue
 
         color = piece.color
@@ -118,12 +119,6 @@ def evaluate(board):
         value = piece_values[piece_type] + get_position_value(piece_type, color, square)
 
         board_value += value * color_multiplier[color]
-        # board_values.append(value)
-
-    # print(board)
-    # print(np.flip(np.array(board_values).reshape(8, 8), 0))
-    # print(f"board_value={board_value}")
-    # print('-----------')
 
     return board_value
 
