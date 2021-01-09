@@ -52,9 +52,9 @@ There is logic in the debug module to generate a file that's interpretable by [G
 - [x] Connect to `lichess` using UCI
 - [x] Run on a cloud instance to improve availability
 - [ ] Create debug plugin for `move_generator` module to generate decision tree for specific moves (currently this logic is duplicated in the `debug_move_generator` module)
-- [ ] Improve sorting of moves (MVV-LVA -- https://www.chessprogramming.org/MVV-LVA)
+- [x] Improve sorting of moves (MVV-LVA -- https://www.chessprogramming.org/MVV-LVA)
 - [ ] Add tests (functional/performance)
-- [ ] Improve performance to reach a minimum search depth of 5-ply, plus quiescence
 - [ ] Set up automated pipeline to run tests and deploy
+- [ ] Implement parallel processing to use multiple cores
 - [ ] Manage AWS resources using CDK
 - [ ] Reinforcement learning?
