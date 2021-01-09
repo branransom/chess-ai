@@ -117,8 +117,6 @@ def quiescence(board, depth, alpha, beta, maximizing_player):
             score = quiescence(board, depth - 1, alpha, beta, not maximizing_player)
             board.pop()
 
-            # if score >= beta:
-            #     return beta
             if score <= alpha:
                 return alpha
             if beta <= alpha:
