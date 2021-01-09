@@ -62,6 +62,7 @@ def get_moves_to_dequiet(board):
 
     return sorted_check_moves + sorted_capture_moves
 
+
 @call_counter
 # https://www.chessprogramming.org/Quiescence_Search
 # each side should have the option of making no move at all
@@ -175,9 +176,9 @@ def groupby(list_to_group, fn):
 
     return grouped_list
 
-def evaluate_move(board, move, depth, maximizing_player):
+def evaluate_move(board, move, depth, alpha, beta, maximizing_player):
     board.push(move)
-    move_value = minimax(board, depth - 1, -math.inf, math.inf, not maximizing_player)
+    move_value = minimax(board, depth - 1, alpha, beta, not maximizing_player)
     board.pop()
     return move_value
 
@@ -194,28 +195,30 @@ def compose_move_type(board):
 
 def next_move(board, depth):
     color = board.turn
-    best_move_value = -math.inf if color else math.inf
     best_move = None
     minimax.calls = 0
     quiescence.calls = 0
+    alpha = -math.inf
+    beta = math.inf
 
     prioritized_moves = prioritize_legal_moves(board)
 
     tic = time.perf_counter()
 
     for move in prioritized_moves:
-        move_value = evaluate_move(board, move, depth, color)
+        move_value = evaluate_move(board, move, depth, alpha, beta, color)
         print(f"move={move}; move_value={move_value}")
 
-        if color and move_value >= best_move_value:
-            best_move_value = move_value
+        if color and move_value >= alpha:
+            alpha = move_value
             best_move = move
-        elif not color and move_value <= best_move_value:
-            best_move_value = move_value
+        elif not color and move_value <= beta:
+            beta = move_value
             best_move = move
+
+    best_move_value = alpha if color else beta
 
     toc = time.perf_counter()
     print(f"Searched {minimax.calls} minimax moves and {quiescence.calls} quiesce moves, and found best move value: {best_move_value} in {toc - tic:0.4f} seconds")
 
     return best_move
-

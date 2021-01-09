@@ -13,7 +13,6 @@ def talk():
     '''
     board = chess.Board()
     depth = get_depth()
-    # model = read_model()
 
     while True:
         msg = input()
