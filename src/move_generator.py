@@ -214,12 +214,16 @@ def next_move(board, depth):
         move_value = evaluate_move(board, move, depth, alpha, beta, color)
         print(f"move={move}; move_value={move_value}")
 
-        if color and move_value >= alpha:
+        if color and move_value > alpha:
             alpha = move_value
             best_move = move
-        elif not color and move_value <= beta:
+        elif not color and move_value < beta:
             beta = move_value
             best_move = move
+
+    # handle case where checkmate is impending... we still need to move
+    if best_move is None:
+        best_move = prioritized_moves[0]
 
     best_move_value = alpha if color else beta
 
