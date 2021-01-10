@@ -78,7 +78,7 @@ def quiescence(board, depth, alpha, beta, maximizing_player):
     elif not maximizing_player and board.is_checkmate():
         # white wins (black made prior move)
         return math.inf
-    elif board.is_stalemate():
+    elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition():
         return 0
 
     stand_pat = evaluate(board)
@@ -140,7 +140,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
     elif not maximizing_player and board.is_checkmate():
         # white wins (black made prior move)
         return math.inf
-    elif board.is_stalemate():
+    elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition():
         return 0
 
     if depth == 0:
