@@ -74,10 +74,10 @@ def get_moves_to_dequiet(board):
 def quiescence(board, depth, alpha, beta, maximizing_player):
     if maximizing_player and board.is_checkmate():
         # black wins (white made prior move)
-        return -math.inf
+        return -20000
     elif not maximizing_player and board.is_checkmate():
         # white wins (black made prior move)
-        return math.inf
+        return 20000
     elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition():
         return 0
 
@@ -136,10 +136,10 @@ def quiescence(board, depth, alpha, beta, maximizing_player):
 def minimax(board, depth, alpha, beta, maximizing_player):
     if maximizing_player and board.is_checkmate():
         # black wins (white made prior move)
-        return -math.inf
+        return -20000
     elif not maximizing_player and board.is_checkmate():
         # white wins (black made prior move)
-        return math.inf
+        return 20000
     elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition():
         return 0
 
