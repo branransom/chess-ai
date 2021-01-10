@@ -61,23 +61,21 @@ def command(board, depth, msg):
         return
 
     if msg == 'test':
-        move = next_move(chess.Board('rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 1 1'), depth)
+        move = next_move(chess.Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w'), depth)
         print(f"{move}")
         return
 
     if msg == 'self':
-        board = chess.Board('rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 1 1')
+        board = chess.Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w')
         while not board.is_game_over():
-            move = next_move(board, depth)
+            move = next_move(board, 5)
             board.push(move)
             print(board)
-            print(f"{move}")
             print('-----------------')
-            time.sleep(5)
         return
 
     if msg == 'eval':
-        board = chess.Board('r1bqkbnr/ppp1ppp1/2np4/7p/3PPB2/P1N2N1P/1PP2PP1/R2QKB1R w KQkq - 0 1')
+        board = chess.Board('r1b1kb1r/pp2pppp/2np1n2/q1pN4/3PP3/8/PPPB1PPP/R2QKBNR b KQkq - 0 1')
         print(evaluate(board))
         return
 

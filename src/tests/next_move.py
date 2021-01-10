@@ -18,5 +18,10 @@ class NextMove(unittest.TestCase):
         move = next_move(board, 3)
         self.assertEqual(str(move), 'h7h8')
 
+    def test_mate_in_three(self):
+        board = chess.Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w')
+        move = next_move(board, 3)
+        self.assertEqual(str(move), 'f6a6')
+
 if __name__ == '__main__':
     unittest.main()

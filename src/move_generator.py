@@ -54,7 +54,11 @@ def prioritize_legal_moves(board):
     return sorted_check_moves + sorted_capture_moves + sorted_quiet_moves
 
 def get_moves_to_dequiet(board):
+    if board.is_check():
+        return prioritize_legal_moves(board)
+
     legal_moves = board.legal_moves
+    
     grouped_moves = groupby(legal_moves, compose_move_type(board))
 
     sorted_check_moves = sort_moves_by_value(board, grouped_moves['check'])
@@ -82,19 +86,22 @@ def quiescence(board, depth, alpha, beta, maximizing_player):
     if depth == 0:
         return stand_pat
 
-    if maximizing_player:
-        if stand_pat >= beta:
-            return beta
-        if alpha < stand_pat:
-            alpha = stand_pat
-    else:
-        if stand_pat <= alpha:
-            return alpha
-        if beta > stand_pat:
-            beta = stand_pat
+    # stand pat is not valid when in check
+    if not board.is_check():
+        if maximizing_player:
+            if stand_pat >= beta:
+                return beta
+            if alpha < stand_pat:
+                alpha = stand_pat
+        else:
+            if stand_pat <= alpha:
+                return alpha
+            if beta > stand_pat:
+                beta = stand_pat
 
     moves = get_moves_to_dequiet(board)
 
+    # if last move resulted in check, then it will stop... add in evasion
     if not moves:
         return evaluate(board)
     
@@ -137,7 +144,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
         return 0
 
     if depth == 0:
-        return quiescence(board, 5, -math.inf, math.inf, maximizing_player)
+        return quiescence(board, 5, alpha, beta, maximizing_player)
 
     prioritized_moves = prioritize_legal_moves(board)
 
@@ -174,9 +181,9 @@ def groupby(list_to_group, fn):
 
     return grouped_list
 
-def evaluate_move(board, move, depth, maximizing_player):
+def evaluate_move(board, move, depth, alpha, beta, maximizing_player):
     board.push(move)
-    move_value = minimax(board, depth - 1, -math.inf, math.inf, not maximizing_player)
+    move_value = minimax(board, depth - 1, alpha, beta, not maximizing_player)
     board.pop()
     return move_value
 
@@ -193,8 +200,9 @@ def compose_move_type(board):
 
 def next_move(board, depth):
     color = board.turn
-    best_move_value = -math.inf if color else math.inf
     best_move = None
+    alpha = -math.inf
+    beta = math.inf
     minimax.calls = 0
     quiescence.calls = 0
 
@@ -203,15 +211,17 @@ def next_move(board, depth):
     tic = time.perf_counter()
 
     for move in prioritized_moves:
-        move_value = evaluate_move(board, move, depth, color)
+        move_value = evaluate_move(board, move, depth, alpha, beta, color)
         print(f"move={move}; move_value={move_value}")
 
-        if color and move_value >= best_move_value:
-            best_move_value = move_value
+        if color and move_value > alpha:
+            alpha = move_value
             best_move = move
-        elif not color and move_value <= best_move_value:
-            best_move_value = move_value
+        elif not color and move_value < beta:
+            beta = move_value
             best_move = move
+
+    best_move_value = alpha if color else beta
 
     toc = time.perf_counter()
     print(f"Searched {minimax.calls} minimax moves and {quiescence.calls} quiesce moves, and found best move {str(best_move)} with value: {best_move_value} in {toc - tic:0.4f} seconds")
