@@ -18,7 +18,7 @@ If running in a virtual env (e.g. `pyenv`), you must run `pyinstaller` in the co
 
 ```
 pip install pyinstaller
-python -m PyInstaller main.py
+pyinstaller src/main.py
 ```
 
 This will generate the binary files in `dist/main`. These files can then be ported over to the `lichess-bot` directory, which provides a bridge to `lichess`. The bridge uses UCI commands to communicate with the chess engine, so the chess engine has a communication layer that will interpret the commands accordingly. These same commands can be provided directly to the chess engine outside of the `lichess` context for debugging purposes.
@@ -35,7 +35,7 @@ After running `pyinstaller` to create a binary file, run:
 cp -r ./dist/main/** ../lichess-bot/engines
 ```
 
-Then, after following installation instructions for `lichess-bot`, run `python -m lichess-bot` in the `lichess-bot` directory. It's important to run it this way, because unexpected errors could occur if not run in the virtual env.
+Then, after following installation instructions for `lichess-bot`, run `python lichess-bot.py` in the `lichess-bot` directory.
 
 ## Debugging
 
@@ -53,6 +53,8 @@ There is logic in the debug module to generate a file that's interpretable by [G
 - [x] Run on a cloud instance to improve availability
 - [ ] Create debug plugin for `move_generator` module to generate decision tree for specific moves (currently this logic is duplicated in the `debug_move_generator` module)
 - [x] Improve sorting of moves (MVV-LVA -- https://www.chessprogramming.org/MVV-LVA)
+- [ ] Implement transposition table
+- [ ] Implement iterative deepening search
 - [ ] Add tests (functional/performance)
 - [ ] Set up automated pipeline to run tests and deploy
 - [ ] Implement parallel processing to use multiple cores
