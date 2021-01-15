@@ -58,7 +58,7 @@ queen_position_values = [
     -20,-10,-10, -5, -5,-10,-10,-20
 ]
 
-king_position_values = [
+king_middlegame_position_values = [
     -30,-40,-40,-50,-50,-40,-40,-30,
     -30,-40,-40,-50,-50,-40,-40,-30,
     -30,-40,-40,-50,-50,-40,-40,-30,
@@ -67,6 +67,17 @@ king_position_values = [
     -10,-20,-20,-20,-20,-20,-20,-10,
      20, 20,  0,  0,  0,  0, 20, 20,
      20, 30, 10,  0,  0, 10, 30, 20
+]
+
+king_endgame_position_values = [
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
 ]
 
 piece_values = {
@@ -79,13 +90,13 @@ piece_values = {
 }
 
 # gotta be a better way to do this... the eval rows are ordered opposite the python-chess ordering of squares
-position_values = {
+middlegame_position_values = {
     chess.PAWN: np.flip(np.array(pawn_position_values).reshape(8, 8), 0).reshape(64),
     chess.ROOK: np.flip(np.array(rook_position_values).reshape(8, 8), 0).reshape(64),
     chess.KNIGHT: np.flip(np.array(knight_position_values).reshape(8, 8), 0).reshape(64),
     chess.BISHOP: np.flip(np.array(bishop_position_values).reshape(8, 8), 0).reshape(64),
     chess.QUEEN: np.flip(np.array(queen_position_values).reshape(8, 8), 0).reshape(64),
-    chess.KING: np.flip(np.array(king_position_values).reshape(8, 8), 0).reshape(64)
+    chess.KING: np.flip(np.array(king_middlegame_position_values).reshape(8, 8), 0).reshape(64)
 }
 
 color_multiplier = {
@@ -93,18 +104,23 @@ color_multiplier = {
     chess.BLACK: -1
 }
 
-@functools.lru_cache(maxsize=12)
-def get_position_values_for_color(piece, color):
-    if (color == chess.WHITE):
-        return position_values[piece]
+# 6 pieces per color, plus 1 per color for king endgame
+@functools.lru_cache(maxsize=14)
+def get_position_values_for_color(piece, color, is_endgame):
+    values = []
+    if is_endgame and piece == chess.KING:
+        values = king_endgame_position_values
     else:
-        return position_values[piece][::-1]
+        values = middlegame_position_values[piece]
+
+    # reverse the board if black's turn
+    return values if color == chess.WHITE else values[::-1]
 
 @functools.lru_cache(maxsize=1000)
-def get_position_value(piece, color, square):
-    return get_position_values_for_color(piece, color)[square]
+def get_position_value(piece, color, square, is_endgame):
+    return get_position_values_for_color(piece, color, is_endgame)[square]
 
-def evaluate(board):
+def evaluate(board, is_endgame):
     board_value = 0
 
     for square in chess.SQUARES:
@@ -116,7 +132,7 @@ def evaluate(board):
         color = piece.color
         piece_type = piece.piece_type
 
-        value = piece_values[piece_type] + get_position_value(piece_type, color, square)
+        value = piece_values[piece_type] + get_position_value(piece_type, color, square, is_endgame)
 
         board_value += value * color_multiplier[color]
 
@@ -124,7 +140,7 @@ def evaluate(board):
 
 # Assume the move is being evaluated before it's made
 # How should checks be valued?
-def evaluate_move_value(board, move):
+def evaluate_move_value(board, move, is_endgame):
     # assume promotion will be queen
     if move.promotion is not None:
         return piece_values[chess.QUEEN]
@@ -139,13 +155,13 @@ def evaluate_move_value(board, move):
     piece_type = board.piece_at(from_square).piece_type
     color = board.turn
 
-    value += position_value_change(piece_type, color, from_square, to_square)
+    value += position_value_change(piece_type, color, from_square, to_square, is_endgame)
 
     return value
 
-def position_value_change(piece, color, from_square, to_square):
-    from_value = get_position_value(piece, color, from_square)
-    to_value = get_position_value(piece, color, to_square)
+def position_value_change(piece, color, from_square, to_square, is_endgame):
+    from_value = get_position_value(piece, color, from_square, is_endgame)
+    to_value = get_position_value(piece, color, to_square, is_endgame)
 
     return to_value - from_value
 
