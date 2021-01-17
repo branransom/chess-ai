@@ -1,6 +1,9 @@
 import math
 import time
+import chess
+import chess.polyglot
 from evaluate import evaluate, color_multiplier
+from transposition_table import TranspositionTable, HashEntry, Flag
 from decorators import call_counter
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
 
@@ -8,6 +11,7 @@ class Searcher():
     def __init__(self, board, depth):
         self.board = board
         self.depth = depth
+        self.transposition_table = TranspositionTable()
 
     @call_counter
     def quiescence(self, board, depth, alpha, beta, **kwargs):
@@ -42,12 +46,30 @@ class Searcher():
 
         return alpha
 
+    # https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning_and_transposition_tables
+    # only need to return best move at the top of the tree
     @call_counter
     def negamax(self, board, depth, alpha, beta, **kwargs):
-        best_move = None
+        alpha_orig = alpha
 
         if board.is_checkmate():
             return -math.inf
+
+        best_move = None
+
+        zobrist = chess.polyglot.zobrist_hash(board)
+        stored_entry = self.transposition_table.get(zobrist)
+
+        if stored_entry is not None and stored_entry.depth >= depth:
+            if stored_entry.flag == Flag.EXACT:
+                return stored_entry.value
+            elif stored_entry.flag == Flag.LOWER_BOUND:
+                alpha = max(alpha, stored_entry.value)
+            elif stored_entry.flag == Flag.UPPER_BOUND:
+                beta = min(beta, stored_entry.value)
+
+            if alpha >= beta:
+                return stored_entry.value
 
         if depth == 0:
             return self.quiescence(board, depth, alpha, beta, **kwargs)
@@ -60,13 +82,24 @@ class Searcher():
             move_eval = -self.negamax(board, depth - 1, -beta, -alpha, **kwargs)
             board.pop()
             alpha = max(alpha, move_eval)
-            if depth == self.depth and move_eval > max_val:
+            if move_eval > max_val:
                 best_move = move
 
             max_val = max(max_val, move_eval)
 
             if alpha >= beta:
                 break
+
+        flag_to_store = None
+        if max_val <= alpha_orig:
+            flag_to_store = Flag.UPPER_BOUND
+        elif max_val >= beta:
+            flag_to_store = Flag.LOWER_BOUND
+        else:
+            flag_to_store = Flag.EXACT
+        
+        new_entry = HashEntry(zobrist, best_move, depth, max_val, flag_to_store, board.fullmove_number)
+        self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
             return ( best_move, max_val )

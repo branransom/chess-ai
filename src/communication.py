@@ -56,7 +56,7 @@ def command(board, depth, msg):
         return
 
     if msg[0:2] == 'go':
-        move = next_move(board, depth)
+        move = Searcher(board, depth).next_move()
         print(f"bestmove {move}")
         return
 
@@ -69,7 +69,7 @@ def command(board, depth, msg):
     if msg == 'self':
         board = Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w')
         while not board.is_game_over():
-            move = next_move(board, 5)
+            move = Searcher(board, 3).next_move()
             board.push(move)
             print(board)
             print('-----------------')
