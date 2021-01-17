@@ -51,9 +51,10 @@ There is logic in the debug module to generate a file that's interpretable by [G
 - [x] Cache position value lookups
 - [x] Connect to `lichess` using UCI
 - [x] Run on a cloud instance to improve availability
-- [ ] Create debug plugin for `move_generator` module to generate decision tree for specific moves (currently this logic is duplicated in the `debug_move_generator` module)
+- [x] Create debug plugin for `move_generator` module to generate decision tree for specific moves
 - [x] Improve sorting of moves (MVV-LVA -- https://www.chessprogramming.org/MVV-LVA)
-- [ ] Implement transposition table
+- [x] Implement transposition table
+- [ ] Implement principle variation
 - [ ] Implement iterative deepening search
 - [ ] Add tests (functional/performance)
 - [ ] Set up automated pipeline to run tests and deploy
