@@ -1,9 +1,9 @@
 import sys
 import chess
 import argparse
-import time
-from move_generator import next_move
+from searcher import Searcher
 from evaluate import evaluate
+from board import Board
 
 # UCI gist: https://gist.github.com/aliostad/f4470274f39d29b788c1b09519e67372
 def talk():
@@ -11,7 +11,7 @@ def talk():
     The main input/output loop.
     This implements a slice of the UCI protocol.
     '''
-    board = chess.Board()
+    board = Board()
     depth = get_depth()
 
     while True:
@@ -61,12 +61,13 @@ def command(board, depth, msg):
         return
 
     if msg == 'test':
-        move = next_move(chess.Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w'), depth)
+        searcher = Searcher(Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w'), depth)
+        move = searcher.next_move()
         print(f"{move}")
         return
 
     if msg == 'self':
-        board = chess.Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w')
+        board = Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w')
         while not board.is_game_over():
             move = next_move(board, 5)
             board.push(move)
@@ -75,7 +76,7 @@ def command(board, depth, msg):
         return
 
     if msg == 'eval':
-        board = chess.Board('r1b1kb1r/pp2pppp/2np1n2/q1pN4/3PP3/8/PPPB1PPP/R2QKBNR b KQkq - 0 1')
+        board = Board('5k2/8/4p3/4Np2/3P4/7r/P3p3/6K1 b - - 0 1')
         print(evaluate(board))
         return
 
