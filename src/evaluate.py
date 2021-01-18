@@ -120,25 +120,6 @@ def get_position_values_for_color(piece, color, is_endgame):
 def get_position_value(piece, color, square, is_endgame):
     return get_position_values_for_color(piece, color, is_endgame)[square]
 
-def evaluate(board):
-    board_value = 0
-    is_endgame = board.is_endgame()
-
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-
-        if not piece:
-            continue
-
-        color = piece.color
-        piece_type = piece.piece_type
-
-        value = piece_values[piece_type] + get_position_value(piece_type, color, square, is_endgame)
-
-        board_value += value * color_multiplier[color]
-
-    return board_value
-
 # Assume the move is being evaluated before it's made
 # How should checks be valued?
 def evaluate_move_value(board, move):
@@ -156,7 +137,7 @@ def evaluate_move_value(board, move):
     piece_type = board.piece_at(from_square).piece_type
     color = board.turn
 
-    value += position_value_change(piece_type, color, from_square, to_square, board.is_endgame())
+    value += position_value_change(piece_type, color, from_square, to_square, board.is_endgame)
 
     return value
 

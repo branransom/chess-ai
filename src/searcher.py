@@ -2,7 +2,7 @@ import math
 import time
 import chess
 import chess.polyglot
-from evaluate import evaluate, color_multiplier
+from evaluate import color_multiplier
 from transposition_table import TranspositionTable, HashEntry, Flag
 from decorators import call_counter
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
@@ -13,47 +13,11 @@ class Searcher():
         self.depth = depth
         self.transposition_table = TranspositionTable()
 
-    @call_counter
-    def quiescence(self, board, depth, alpha, beta, **kwargs):
-        color = board.turn
-
-        if board.is_checkmate():
-            return -math.inf
-
-        stand_pat = evaluate(board) * color_multiplier[color]
-
-        if depth < -10:
-            return stand_pat
-
-        if not board.is_check():
-            if stand_pat >= beta:
-                return beta
-            alpha = max(alpha, stand_pat)
-
-        moves = get_moves_to_dequiet(board)
-
-        if not moves:
-            return stand_pat
-
-        for move in moves:
-            board.push(move)
-            move_eval = -self.quiescence(board, depth - 1, -beta, -alpha)
-            board.pop()
-
-            if move_eval >= beta:
-                return beta
-            alpha = max(alpha, move_eval)
-
-        return alpha
-
     # https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning_and_transposition_tables
     # only need to return best move at the top of the tree
     @call_counter
     def negamax(self, board, depth, alpha, beta, **kwargs):
         alpha_orig = alpha
-
-        if board.is_checkmate():
-            return -math.inf
 
         best_move = None
 
@@ -71,13 +35,31 @@ class Searcher():
             if alpha >= beta:
                 return stored_entry.value
 
-        if depth == 0:
-            return self.quiescence(board, depth, alpha, beta, **kwargs)
+        if board.is_checkmate():
+            return -math.inf
+        elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition():
+            return 0
 
-        prioritized_moves = prioritize_legal_moves(board)
+        if depth <= 0:
+            color = board.turn
+            stand_pat = board.value() * color_multiplier[color]
+            if not board.is_check():
+                if stand_pat >= beta:
+                    return beta
+                alpha = max(alpha, stand_pat)
+
+            if depth < -10:
+                return stand_pat
+
+            moves = get_moves_to_dequiet(board)
+
+            if not moves:
+                return stand_pat
+        else:
+            moves = prioritize_legal_moves(board)
 
         max_val = -math.inf
-        for move in prioritized_moves:
+        for move in moves:
             board.push(move)
             move_eval = -self.negamax(board, depth - 1, -beta, -alpha, **kwargs)
             board.pop()
@@ -121,7 +103,6 @@ class Searcher():
             best_move = prioritized_moves[0]
 
         toc = time.perf_counter()
-        print(f"Searched {self.negamax.calls} minimax moves and {self.quiescence.calls} quiesce moves, and found best move {best_move} with value: {best_move_value} in {toc - tic:0.4f} seconds")
+        print(f"Searched {self.negamax.calls} moves, and found best move {best_move} with value: {best_move_value} in {toc - tic:0.4f} seconds")
 
         return best_move
-

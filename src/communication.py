@@ -2,7 +2,6 @@ import sys
 import chess
 import argparse
 from searcher import Searcher
-from evaluate import evaluate
 from board import Board
 
 # UCI gist: https://gist.github.com/aliostad/f4470274f39d29b788c1b09519e67372
@@ -67,7 +66,7 @@ def command(board, depth, msg):
         return
 
     if msg == 'self':
-        board = Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w')
+        board = Board()
         while not board.is_game_over():
             move = Searcher(board, 3).next_move()
             board.push(move)
@@ -77,7 +76,7 @@ def command(board, depth, msg):
 
     if msg == 'eval':
         board = Board('5k2/8/4p3/4Np2/3P4/7r/P3p3/6K1 b - - 0 1')
-        print(evaluate(board))
+        print(board.value())
         return
 
 
