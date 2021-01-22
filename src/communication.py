@@ -3,6 +3,7 @@ import chess
 import argparse
 from searcher import Searcher
 from board import Board
+from transposition_table import TranspositionTable
 
 # UCI gist: https://gist.github.com/aliostad/f4470274f39d29b788c1b09519e67372
 def talk():
@@ -12,6 +13,7 @@ def talk():
     '''
     board = Board()
     depth = get_depth()
+    transposition_table = TranspositionTable()
 
     while True:
         msg = input()
@@ -20,10 +22,10 @@ def talk():
         if (msg == 'quit'):
             break
 
-        command(board, depth, msg)
+        command(board, depth, transposition_table, msg)
 
 
-def command(board, depth, msg):
+def command(board, depth, transposition_table, msg):
     '''
     Accept UCI commands and respond.
     The board state is also updated.
@@ -55,31 +57,15 @@ def command(board, depth, msg):
         return
 
     if msg[0:2] == 'go':
-        move = Searcher(board, depth).next_move()
+        move = Searcher(board, depth, transposition_table).next_move()
         print(f"bestmove {move}")
         return
 
     if msg == 'test':
-        searcher = Searcher(Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w'), depth)
+        searcher = Searcher(Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w'), depth, transposition_table)
         move = searcher.next_move()
         print(f"{move}")
         return
-
-    if msg == 'self':
-        board = Board()
-        while not board.is_game_over():
-            move = Searcher(board, 3).next_move()
-            board.push(move)
-            print(board)
-            print('-----------------')
-        return
-
-    if msg == 'eval':
-        board = Board('5k2/8/4p3/4Np2/3P4/7r/P3p3/6K1 b - - 0 1')
-        print(board.value())
-        return
-
-
 
 def get_depth():
     parser = argparse.ArgumentParser()

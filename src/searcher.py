@@ -3,15 +3,16 @@ import time
 import chess
 import chess.polyglot
 from evaluate import color_multiplier
-from transposition_table import TranspositionTable, HashEntry, Flag
+from transposition_table import HashEntry, Flag
 from decorators import call_counter
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
 
+# TODO: Future enhancement... rotate the board so that the bot can play vs itself
 class Searcher():
-    def __init__(self, board, depth):
+    def __init__(self, board, depth, transposition_table):
         self.board = board
         self.depth = depth
-        self.transposition_table = TranspositionTable()
+        self.transposition_table = transposition_table
 
     # https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning_and_transposition_tables
     # only need to return best move at the top of the tree
@@ -63,11 +64,12 @@ class Searcher():
             board.push(move)
             move_eval = -self.negamax(board, depth - 1, -beta, -alpha, **kwargs)
             board.pop()
-            alpha = max(alpha, move_eval)
+
             if move_eval > max_val:
                 best_move = move
 
             max_val = max(max_val, move_eval)
+            alpha = max(alpha, max_val)
 
             if alpha >= beta:
                 break
@@ -80,7 +82,8 @@ class Searcher():
         else:
             flag_to_store = Flag.EXACT
         
-        new_entry = HashEntry(zobrist, best_move, depth, max_val, flag_to_store, board.fullmove_number)
+        # Depth for quiescence search should be set to 0, since it will search until a quiet position is found
+        new_entry = HashEntry(zobrist, best_move, max(depth, 0), max_val, flag_to_store, board.fullmove_number)
         self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
