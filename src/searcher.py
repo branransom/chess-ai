@@ -23,7 +23,7 @@ class Searcher():
         best_move = None
 
         zobrist = chess.polyglot.zobrist_hash(board)
-        stored_entry = self.transposition_table.get(zobrist)
+        stored_entry = self.transposition_table.get(zobrist, depth)
 
         if stored_entry is not None and stored_entry.depth >= depth:
             if stored_entry.flag == Flag.EXACT:
@@ -49,7 +49,7 @@ class Searcher():
                     return beta
                 alpha = max(alpha, stand_pat)
 
-            if depth < -10:
+            if depth < -5:
                 return stand_pat
 
             moves = get_moves_to_dequiet(board)

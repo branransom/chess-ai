@@ -33,13 +33,13 @@ class TranspositionTable:
         if not stored_entry or hash_entry.age > stored_entry.age or hash_entry.depth > stored_entry.depth:
             np.put(self.table, index, hash_entry)
 
-    def get(self, zobrist):
+    def get(self, zobrist, depth):
         index = zobrist % table_size
 
         stored_entry = self.table[index]
 
         # do not return entry if zobrist does not match (collision occurred)
-        if not stored_entry or zobrist != stored_entry.zobrist:
-            return None
+        if stored_entry and zobrist == stored_entry.zobrist and stored_entry.depth >= depth:
+            return stored_entry
 
-        return stored_entry
+        return None

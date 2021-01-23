@@ -1,2 +1,3 @@
 chess
 numpy==1.18.0
+treelib
