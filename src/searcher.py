@@ -18,6 +18,12 @@ class Searcher():
     # only need to return best move at the top of the tree
     @call_counter
     def negamax(self, board, depth, alpha, beta, **kwargs):
+        if board.is_checkmate():
+            return -math.inf
+        # can_claim_draw() is slow, due to 3-fold repetition check... limiting it to non-quiescence search to improve perf
+        elif depth > 0 and (board.is_stalemate() or board.can_claim_draw()):
+            return 0
+
         alpha_orig = alpha
 
         best_move = None
@@ -35,11 +41,6 @@ class Searcher():
 
             if alpha >= beta:
                 return stored_entry.value
-
-        if board.is_checkmate():
-            return -math.inf
-        elif board.is_stalemate() or board.can_claim_draw() or board.is_fivefold_repetition():
-            return 0
 
         if depth <= 0:
             color = board.turn
@@ -64,6 +65,9 @@ class Searcher():
             board.push(move)
             move_eval = -self.negamax(board, depth - 1, -beta, -alpha, **kwargs)
             board.pop()
+
+            if depth <= 0 and move_eval >= beta:
+                return beta
 
             if move_eval > max_val:
                 best_move = move
