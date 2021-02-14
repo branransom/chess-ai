@@ -35,16 +35,16 @@ def generate_move_tree(func):
             move = 'root'
 
         # caller function (parent)
-        parent_kwargs = sys._getframe(0).f_locals['kwargs']
+        parent_kwargs = sys._getframe(0).f_locals["kwargs"]
         parent_id = parent_kwargs.get("node_id", "root")
         tree = parent_kwargs.get("tree", None)
         if not tree:
             tree = Tree()
-            tree.create_node('root', "root")
+            tree.create_node("root", "root")
 
         tree.create_node(f"{move} a={alpha} b={beta} white={board.turn}", node_id, parent=parent_id)
 
-        kwargs.update({ 'node_id': node_id })
+        kwargs.update({ "node_id": node_id, "tree": tree })
         result = func(*args, **kwargs)
 
         node = tree.get_node(node_id)
