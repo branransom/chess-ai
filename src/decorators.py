@@ -1,7 +1,6 @@
 import time
 import uuid
 import sys
-from treelib import Tree
 
 def call_counter(func):
     def helper(*args, **kwargs):
@@ -37,18 +36,18 @@ def generate_move_tree(func):
         # caller function (parent)
         parent_kwargs = sys._getframe(0).f_locals["kwargs"]
         parent_id = parent_kwargs.get("node_id", "root")
-        tree = parent_kwargs.get("tree", None)
-        if not tree:
-            tree = Tree()
-            tree.create_node("root", "root")
+        nodes = parent_kwargs.get("nodes", None)
+        if not nodes:
+            nodes = []
 
-        tree.create_node(f"{move} a={alpha} b={beta} white={board.turn}", node_id, parent=parent_id)
+        node = { "name": f"{move}", "id": node_id, "parent": parent_id, "alpha": alpha, "beta": beta, "is_white": board.turn }
 
-        kwargs.update({ "node_id": node_id, "tree": tree })
+        nodes.append(node)
+
+        kwargs.update({ "node_id": node_id, "nodes": nodes })
         result = func(*args, **kwargs)
 
-        node = tree.get_node(node_id)
-        node.tag = f"{node.tag} {result}"
+        node["value"] = result
 
         return result
 

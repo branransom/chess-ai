@@ -1,11 +1,18 @@
 import math
 import time
+import json
 import chess
 import chess.polyglot
 from evaluate import color_multiplier
 from transposition_table import HashEntry, Flag
-from decorators import call_counter
+from decorators import call_counter, generate_move_tree
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
+from json_encoder import JSONEncoder
+
+def handle_search_complete(kwargs):
+    nodes = kwargs.get("nodes")
+    with open('tree.json', 'w') as f:
+        f.write(json.dumps(nodes, indent=4, cls=JSONEncoder))
 
 # TODO: Future enhancement... rotate the board so that the bot can play vs itself
 class Searcher():
@@ -17,6 +24,7 @@ class Searcher():
     # https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning_and_transposition_tables
     # only need to return best move at the top of the tree
     @call_counter
+    @generate_move_tree
     def negamax(self, board, depth, alpha, beta, **kwargs):
         if board.is_checkmate():
             return -math.inf
@@ -91,6 +99,7 @@ class Searcher():
         self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
+            handle_search_complete(kwargs)
             return ( best_move, max_val )
         return max_val
 
