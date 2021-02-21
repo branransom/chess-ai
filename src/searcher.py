@@ -9,10 +9,12 @@ from decorators import call_counter, generate_move_tree
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
 from json_encoder import JSONEncoder
 
-def handle_search_complete(kwargs):
+def handle_search_complete(pline, kwargs):
+    print(f"Principal Variation: {pline}")
     nodes = kwargs.get("nodes")
     with open('tree.json', 'w') as f:
         f.write(json.dumps(nodes, indent=4, cls=JSONEncoder))
+
 
 # TODO: Future enhancement... rotate the board so that the bot can play vs itself
 class Searcher():
@@ -25,7 +27,8 @@ class Searcher():
     # only need to return best move at the top of the tree
     @call_counter
     @generate_move_tree
-    def negamax(self, board, depth, alpha, beta, **kwargs):
+    def negamax(self, board, depth, alpha, beta, pline = [], **kwargs):
+        line = []
         if board.is_checkmate():
             return -math.inf
         # can_claim_draw() is slow, due to 3-fold repetition check... limiting it to non-quiescence search to improve perf
@@ -71,7 +74,7 @@ class Searcher():
         max_val = -math.inf
         for move in moves:
             board.push(move)
-            move_eval = -self.negamax(board, depth - 1, -beta, -alpha, **kwargs)
+            move_eval = -self.negamax(board, depth - 1, -beta, -alpha, line, **kwargs)
             board.pop()
 
             if depth <= 0 and move_eval >= beta:
@@ -79,6 +82,7 @@ class Searcher():
 
             if move_eval > max_val:
                 best_move = move
+                pline[:] = [str(move)] + line
 
             max_val = max(max_val, move_eval)
             alpha = max(alpha, max_val)
@@ -99,7 +103,7 @@ class Searcher():
         self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
-            handle_search_complete(kwargs)
+            handle_search_complete(pline, kwargs)
             return ( best_move, max_val )
         return max_val
 
