@@ -16,6 +16,16 @@ class HashEntry:
         self.flag = flag
         self.age = age
 
+    def json(self):
+        return {
+            'zobrist': self.zobrist,
+            'best_move': str(self.best_move),
+            'depth': self.depth,
+            'value': self.value,
+            'flag': self.flag.name,
+            'age': self.age
+        }
+
 # 2^20 + 7 (prime number)
 table_size = 1048583
 

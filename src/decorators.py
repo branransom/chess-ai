@@ -1,6 +1,7 @@
 import time
 import uuid
 import sys
+import chess.polyglot
 
 def call_counter(func):
     def helper(*args, **kwargs):
@@ -32,22 +33,26 @@ def generate_move_tree(func):
             move = board.peek()
         except:
             move = 'root'
+            node_id = 'root'
 
         # caller function (parent)
         parent_kwargs = sys._getframe(0).f_locals["kwargs"]
         parent_id = parent_kwargs.get("node_id", "root")
         nodes = parent_kwargs.get("nodes", None)
-        if not nodes:
+        if nodes is None:
             nodes = []
 
-        node = { "name": f"{move}", "id": node_id, "parent": parent_id, "alpha": alpha, "beta": beta, "is_white": board.turn }
+        node = { "name": f"{move}", "id": node_id, "parent": parent_id, "alpha": -beta, "beta": -alpha, "is_white": not board.turn, "zobrist": chess.polyglot.zobrist_hash(board) }
 
-        nodes.append(node)
+        if move != 'root':
+            nodes.append(node)
 
         kwargs.update({ "node_id": node_id, "nodes": nodes })
         result = func(*args, **kwargs)
 
-        node["value"] = result
+        # Find a better way to do this
+        if (type(result) is not tuple):
+            node["value"] = -result
 
         return result
 
