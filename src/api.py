@@ -3,9 +3,11 @@ from searcher import Searcher
 from board import Board
 from transposition_table import TranspositionTable
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from json_encoder import JSONEncoder
 
 app = Flask(__name__)
+CORS(app)
 app.config["DEBUG"] = True
 app.json_encoder = JSONEncoder
 depth = 3
@@ -27,5 +29,13 @@ def get_transposition_table():
     json_table = list(map(lambda x: x.json(), filter(lambda entry: entry is not None, table)))
 
     return jsonify(json_table)
+
+@app.route('/decision_tree', methods=['GET'])
+def get_decision_tree():
+    with open('tree.json') as f:
+        data = json.load(f)
+
+    return jsonify(data)
+
 
 app.run()

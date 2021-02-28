@@ -30,7 +30,7 @@ class Searcher():
     def negamax(self, board, depth, alpha, beta, pline = [], **kwargs):
         line = []
         if board.is_checkmate():
-            return -math.inf
+            return -99999
         # can_claim_draw() is slow, due to 3-fold repetition check... limiting it to non-quiescence search to improve perf
         elif depth > 0 and (board.is_stalemate() or board.can_claim_draw()):
             return 0
@@ -71,7 +71,7 @@ class Searcher():
         else:
             moves = prioritize_legal_moves(board)
 
-        max_val = -math.inf
+        max_val = -99999
         for move in moves:
             board.push(move)
             move_eval = -self.negamax(board, depth - 1, -beta, -alpha, line, **kwargs)
@@ -109,8 +109,8 @@ class Searcher():
 
     def next_move(self):
         best_move = None
-        alpha = -math.inf
-        beta = math.inf
+        alpha = -99999
+        beta = 99999
 
         prioritized_moves = prioritize_legal_moves(self.board)
 
