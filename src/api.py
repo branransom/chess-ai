@@ -21,29 +21,6 @@ def reset():
 
     return jsonify({ "success": True })
 
-@app.route('/move', methods=['POST'])
-def move():
-    data = request.json
-    starting_fen = data.get('fen')
-    source_square = data.get('sourceSquare')
-    target_square = data.get('targetSquare')
-
-    if source_square is None:
-        return 'Must pass sourceSquare', 400
-
-    if target_square is None:
-        return 'Must pass targetSquare', 400
-
-    if starting_fen is not None:
-        board = Board(starting_fen)
-    else:
-        board = Board()
-
-    move = chess.Move(chess.parse_square(source_square), chess.parse_square(target_square))
-    board.push(move)
-
-    return jsonify({ "fen": board.fen(), "last_move": str(move) })
-
 @app.route('/next_move', methods=['POST'])
 def next_move():
     data = request.json
@@ -58,6 +35,8 @@ def next_move():
         return jsonify({ "fen": board.fen(), "is_game_over": True })
     
     move = Searcher(board, depth, transposition_table).next_move()
+
+    board.push(move)
 
     return jsonify({ "fen": board.fen(), "last_move": str(move), "is_game_over": False })
 
