@@ -15,7 +15,7 @@ def initialize_piece_count():
 def no_queen_or_at_most_one_minor_piece(piece_count, color):
     counts = piece_count[color]
 
-    return counts[chess.QUEEN] == 0 or (counts[chess.ROOK] == 0 and counts[chess.BISHOP] + counts[chess.KNIGHT] <= 1)
+    return counts[chess.QUEEN] == 0 or (counts[chess.BISHOP] + counts[chess.KNIGHT] <= 1)
 
 class Board(chess.Board):
     def __init__(self, *args):
