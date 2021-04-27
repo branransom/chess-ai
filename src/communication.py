@@ -57,7 +57,10 @@ def command(board, depth, transposition_table, msg):
         return
 
     if msg[0:2] == 'go':
-        move = Searcher(board, depth, transposition_table).next_move()
+        if board.is_endgame:
+            move = Searcher(board, depth + 4, transposition_table).next_move()
+        else:
+            move = Searcher(board, depth, transposition_table).next_move()
         print(f"bestmove {move}")
         return
 

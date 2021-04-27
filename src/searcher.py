@@ -105,7 +105,7 @@ class Searcher():
 
         if depth == self.depth:
             handle_search_complete(pline, kwargs)
-            return ( best_move, max_val )
+
         return ( best_move, max_val )
 
     def next_move(self):
