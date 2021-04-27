@@ -9,12 +9,17 @@ from decorators import call_counter, generate_move_tree
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
 from json_encoder import JSONEncoder
 
-def handle_search_complete(pline, kwargs):
+def handle_search_complete(pline, transposition_table, kwargs):
     print(f"Principal Variation: {pline}")
+
     nodes = kwargs.get("nodes")
     with open('tree.json', 'w') as f:
         f.write(json.dumps(nodes, indent=4, cls=JSONEncoder))
 
+    table = getattr(transposition_table, 'table')
+    json_table = list(map(lambda x: x.json(), filter(lambda entry: entry is not None, table)))
+    with open('transposition_table.json', 'w') as f:
+        f.write(json.dumps(json_table, indent=4, cls=JSONEncoder))
 
 # TODO: Future enhancement... rotate the board so that the bot can play vs itself
 class Searcher():
@@ -104,7 +109,7 @@ class Searcher():
         self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
-            handle_search_complete(pline, kwargs)
+            handle_search_complete(pline, self.transposition_table, kwargs)
 
         return ( best_move, max_val )
 
