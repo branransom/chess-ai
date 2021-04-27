@@ -44,14 +44,14 @@ class Searcher():
 
         if stored_entry is not None and stored_entry.depth >= depth:
             if stored_entry.flag == Flag.EXACT:
-                return ( best_move, stored_entry.value )
+                return ( stored_entry.best_move, stored_entry.value )
             elif stored_entry.flag == Flag.LOWER_BOUND:
                 alpha = max(alpha, stored_entry.value)
             elif stored_entry.flag == Flag.UPPER_BOUND:
                 beta = min(beta, stored_entry.value)
 
             if alpha >= beta:
-                return ( best_move, stored_entry.value )
+                return ( stored_entry.best_move, stored_entry.value )
 
         if depth <= 0:
             color = board.turn
