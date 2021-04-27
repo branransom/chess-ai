@@ -29,56 +29,57 @@ class Searcher():
     @generate_move_tree
     def negamax(self, board, depth, alpha, beta, pline = [], **kwargs):
         line = []
+        best_move = None
+
         if board.is_checkmate():
-            return -99999
+            return ( best_move, -99999 )
         # can_claim_draw() is slow, due to 3-fold repetition check... limiting it to non-quiescence search to improve perf
         elif depth > 0 and (board.is_stalemate() or board.can_claim_draw()):
-            return 0
+            return ( best_move, 0 )
 
         alpha_orig = alpha
-
-        best_move = None
 
         zobrist = chess.polyglot.zobrist_hash(board)
         stored_entry = self.transposition_table.get(zobrist, depth)
 
         if stored_entry is not None and stored_entry.depth >= depth:
             if stored_entry.flag == Flag.EXACT:
-                return stored_entry.value
+                return ( best_move, stored_entry.value )
             elif stored_entry.flag == Flag.LOWER_BOUND:
                 alpha = max(alpha, stored_entry.value)
             elif stored_entry.flag == Flag.UPPER_BOUND:
                 beta = min(beta, stored_entry.value)
 
             if alpha >= beta:
-                return stored_entry.value
+                return ( best_move, stored_entry.value )
 
         if depth <= 0:
             color = board.turn
             stand_pat = board.value() * color_multiplier[color]
             if not board.is_check():
                 if stand_pat >= beta:
-                    return beta
+                    return ( best_move, beta )
                 alpha = max(alpha, stand_pat)
 
             if depth < -5:
-                return stand_pat
+                return ( best_move, stand_pat )
 
             moves = get_moves_to_dequiet(board)
 
             if not moves:
-                return stand_pat
+                return ( best_move, stand_pat )
         else:
             moves = prioritize_legal_moves(board)
 
         max_val = -99999
         for move in moves:
             board.push(move)
-            move_eval = -self.negamax(board, depth - 1, -beta, -alpha, line, **kwargs)
+            result = self.negamax(board, depth - 1, -beta, -alpha, line, **kwargs)
+            move_eval = -result[1]
             board.pop()
 
             if depth <= 0 and move_eval >= beta:
-                return beta
+                return ( best_move, beta )
 
             if move_eval > max_val:
                 best_move = move
@@ -105,7 +106,7 @@ class Searcher():
         if depth == self.depth:
             handle_search_complete(pline, kwargs)
             return ( best_move, max_val )
-        return max_val
+        return ( best_move, max_val )
 
     def next_move(self):
         best_move = None
