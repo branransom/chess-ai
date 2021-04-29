@@ -54,6 +54,12 @@ def get_decision_tree():
 
     return jsonify(data)
 
+@app.route('/principal_variation', methods=['GET'])
+def get_principal_variation():
+    with open('principal_variation.json') as f:
+        data = json.load(f)
+
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run()

@@ -49,10 +49,7 @@ def generate_move_tree(func):
 
         kwargs.update({ "node_id": node_id, "nodes": nodes })
         result = func(*args, **kwargs)
-
-        # Find a better way to do this
-        if (type(result) is not tuple):
-            node["value"] = -result
+        node["value"] = -result[1]
 
         return result
 

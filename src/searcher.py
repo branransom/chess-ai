@@ -1,4 +1,3 @@
-import math
 import time
 import json
 import chess
@@ -11,6 +10,8 @@ from json_encoder import JSONEncoder
 
 def handle_search_complete(pline, transposition_table, kwargs):
     print(f"Principal Variation: {pline}")
+    with open('principal_variation.json', 'w') as f:
+        f.write(json.dumps(pline, indent=4, cls=JSONEncoder))
 
     nodes = kwargs.get("nodes")
     with open('tree.json', 'w') as f:
@@ -88,7 +89,7 @@ class Searcher():
 
             if move_eval > max_val:
                 best_move = move
-                pline[:] = [str(move)] + line
+                pline[:] = [{ "id": str(kwargs.get("node_id")), "move": str(move) }] + line
 
             max_val = max(max_val, move_eval)
             alpha = max(alpha, max_val)
