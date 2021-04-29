@@ -1,4 +1,6 @@
 chess
 numpy==1.18.0
 treelib
+flask
+flask_cors
 psycopg2
