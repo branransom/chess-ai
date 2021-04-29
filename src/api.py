@@ -55,4 +55,5 @@ def get_decision_tree():
     return jsonify(data)
 
 
-app.run()
+if __name__ == "__main__":
+    app.run()
