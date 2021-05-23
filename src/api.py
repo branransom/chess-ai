@@ -5,6 +5,21 @@ from transposition_table import TranspositionTable
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from json_encoder import JSONEncoder
+import os
+import psycopg2
+
+
+DATABASE_URL = os.environ['DATABASE_URL']
+
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+cur = conn.cursor()
+cur.execute("CREATE TABLE test (id serial PRIMARY KEY, num integer, data varchar);")
+cur.execute("INSERT INTO test (num, data) VALUES (%s, %s)", (100, "abc'def"))
+cur.execute("SELECT * FROM test;")
+cur.fetchone()
+conn.commit()
+cur.close()
+conn.close()
 
 app = Flask(__name__)
 CORS(app)
