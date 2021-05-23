@@ -1,1 +1,1 @@
-web: gunicorn chess.wsgi
+web: gunicorn gettingstarted.wsgi
