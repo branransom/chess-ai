@@ -1,7 +1,7 @@
 import json
 import chess
 from searcher import Searcher
-from board import Board
+from board_wrapper import Board
 from transposition_table import TranspositionTable
 from flask import Flask, request, jsonify
 from flask_cors import CORS

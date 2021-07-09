@@ -1,5 +1,5 @@
 import time
-from board import Board
+from board_wrapper import Board
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
 
 def perft(depth, board):

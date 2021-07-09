@@ -2,7 +2,7 @@ import sys
 import chess
 import argparse
 from searcher import Searcher
-from board import Board
+from board_wrapper import Board
 from transposition_table import TranspositionTable
 
 # UCI gist: https://gist.github.com/aliostad/f4470274f39d29b788c1b09519e67372

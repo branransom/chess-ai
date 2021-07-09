@@ -10,6 +10,18 @@ It has not been optimized for performance yet, so classical games are preferred.
 
 The engine is now running on a `t2.micro` AWS EC2 instance.
 
+## How to Run Flask API
+
+Running with Flask exposes a REST API that can be used to interact with the chess bot.
+
+Run the following commands from the root directory:
+
+```
+export FLASK_APP=src/api.py
+export FLASK_ENV=development
+flask run
+```
+
 ## How to Run on lichess
 
 ### Creating binary file
@@ -17,8 +29,11 @@ The engine is now running on a `t2.micro` AWS EC2 instance.
 If running in a virtual env (e.g. `pyenv`), you must run `pyinstaller` in the context of that virtual env:
 
 ```
+# --enable-shared is required for PyInstaller to work
+env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.9
+
 pip install pyinstaller
-pyinstaller src/main.py
+pyinstaller --paths=src src/main.py
 ```
 
 This will generate the binary files in `dist/main`. These files can then be ported over to the `lichess-bot` directory, which provides a bridge to `lichess`. The bridge uses UCI commands to communicate with the chess engine, so the chess engine has a communication layer that will interpret the commands accordingly. These same commands can be provided directly to the chess engine outside of the `lichess` context for debugging purposes.
@@ -56,6 +71,7 @@ There is logic in the debug module to generate a file that's interpretable by [G
 - [x] Implement transposition table
 - [ ] Implement principle variation
 - [ ] Implement iterative deepening search
+- [ ] Add API docs
 - [ ] Add tests (functional/performance)
 - [ ] Set up automated pipeline to run tests and deploy
 - [ ] Implement parallel processing to use multiple cores
