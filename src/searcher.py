@@ -105,7 +105,7 @@ class Searcher():
             flag_to_store = Flag.EXACT
         
         # Depth for quiescence search should be set to 0, since it will search until a quiet position is found
-        new_entry = HashEntry(zobrist, best_move, max(depth, 0), max_val, flag_to_store, board.fullmove_number)
+        new_entry = HashEntry(zobrist, best_move, max(depth, 0), max_val, flag_to_store, board.halfmove_clock)
         self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
