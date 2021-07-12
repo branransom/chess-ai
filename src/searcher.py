@@ -2,7 +2,7 @@ import time
 import json
 import chess
 import chess.polyglot
-from evaluate import color_multiplier
+from evaluate import color_multiplier, evaluate_move_value
 from transposition_table import HashEntry, Flag
 from decorators import call_counter, generate_move_tree
 from move_sorter import get_moves_to_dequiet, prioritize_legal_moves
@@ -33,7 +33,7 @@ class Searcher():
     # only need to return best move at the top of the tree
     @call_counter
     @generate_move_tree
-    def negamax(self, board, depth, alpha, beta, pline = [], **kwargs):
+    def negamax(self, board, depth, alpha, beta, root = True, pline = [], **kwargs):
         line = []
         best_move = None
 
@@ -77,10 +77,12 @@ class Searcher():
         else:
             moves = prioritize_legal_moves(board)
 
+        # TODO: insert principal variation at beginning of move list
+
         max_val = -99999
         for move in moves:
             board.push(move)
-            result = self.negamax(board, depth - 1, -beta, -alpha, line, **kwargs)
+            result = self.negamax(board, depth - 1, -beta, -alpha, False, line, **kwargs)
             move_eval = -result[1]
             board.pop()
 
@@ -106,6 +108,7 @@ class Searcher():
             flag_to_store = Flag.EXACT
         
         # Depth for quiescence search should be set to 0, since it will search until a quiet position is found
+        # TODO: store principal variation in transposition_table
         new_entry = HashEntry(zobrist, best_move, max(depth, 0), max_val, flag_to_store, board.halfmove_clock)
         self.transposition_table.replace(new_entry)
 
@@ -115,21 +118,32 @@ class Searcher():
         return ( best_move, max_val )
 
     def next_move(self):
-        best_move = None
         alpha = -99999
         beta = 99999
 
         prioritized_moves = prioritize_legal_moves(self.board)
+        self.best_move = prioritized_moves[0]
+        self.best_move_value = evaluate_move_value(self.board, self.best_move)
 
         tic = time.perf_counter()
+        start = time.time()
 
-        best_move, best_move_value = self.negamax(self.board, self.depth, alpha, beta)
+        while True:
+            best_move, best_move_value = self.negamax(self.board, self.depth, alpha, beta, True)
 
-        # handle case where checkmate is impending... we still need to move
-        if best_move is None:
-            best_move = prioritized_moves[0]
+            # checkmate is impending
+            if best_move is None:
+                break
+
+            self.best_move = best_move
+            self.best_move_value = best_move_value
+            
+            if time.time() - start > 1:
+                break
+
+            self.depth += 1
 
         toc = time.perf_counter()
-        print(f"Searched {self.negamax.calls} moves, and found best move {best_move} with value: {best_move_value} in {toc - tic:0.4f} seconds")
+        print(f"Searched {self.negamax.calls} moves, and found best move {self.best_move} with value: {self.best_move_value} in {toc - tic:0.4f} seconds")
 
-        return best_move
+        return self.best_move

@@ -6,3 +6,6 @@
 
 # Don't move bishop
 4r1k1/1bP2ppp/8/8/3Rp3/P2n2P1/1P5P/K7 b - - 0 1
+
+# Didn't detect checkmate in 5 moves: https://lichess.org/mcfzQqh7/black#67
+r2k2r1/ppp5/3bQ2p/6q1/8/P4R1P/1PP2P2/1K1R4 b - - 0 1

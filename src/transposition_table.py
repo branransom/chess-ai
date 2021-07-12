@@ -49,7 +49,7 @@ class TranspositionTable:
         stored_entry = self.table[index]
 
         # do not return entry if zobrist does not match (collision occurred)
-        if stored_entry and zobrist == stored_entry.zobrist and stored_entry.depth >= depth:
+        if stored_entry and zobrist == stored_entry.zobrist:
             return stored_entry
 
         return None
