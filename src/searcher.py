@@ -31,8 +31,8 @@ class Searcher():
 
     # https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning_and_transposition_tables
     # only need to return best move at the top of the tree
-    #@call_counter
-    #@generate_move_tree
+    @call_counter
+    @generate_move_tree
     def negamax(self, board, depth, alpha, beta, root = True, pline = [], **kwargs):
         line = []
         best_move = None
@@ -48,7 +48,7 @@ class Searcher():
         zobrist = chess.polyglot.zobrist_hash(board)
         stored_entry = self.transposition_table.get(zobrist, depth)
 
-        if stored_entry is not None and stored_entry.depth >= depth:
+        if stored_entry is not None and stored_entry.depth <= depth:
             if stored_entry.flag == Flag.EXACT:
                 return ( stored_entry.best_move, stored_entry.value )
             elif stored_entry.flag == Flag.LOWER_BOUND:
@@ -78,6 +78,7 @@ class Searcher():
             moves = prioritize_legal_moves(board)
 
         # TODO: insert principal variation at beginning of move list
+        print(pline)
 
         max_val = -99999
         for move in moves:
@@ -109,7 +110,7 @@ class Searcher():
         
         # Depth for quiescence search should be set to 0, since it will search until a quiet position is found
         # TODO: store principal variation in transposition_table
-        new_entry = HashEntry(zobrist, best_move, max(depth, 0), max_val, flag_to_store, board.halfmove_clock)
+        new_entry = HashEntry(zobrist, best_move, depth, max_val, flag_to_store, board.halfmove_clock)
         self.transposition_table.replace(new_entry)
 
         if depth == self.depth:
@@ -129,6 +130,9 @@ class Searcher():
         start = time.time()
 
         while True:
+            best_move = None
+            best_move_value = None
+
             best_move, best_move_value = self.negamax(self.board, self.depth, alpha, beta, True)
 
             # checkmate is impending
