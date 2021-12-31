@@ -50,6 +50,7 @@ def generate_move_tree(func):
         kwargs.update({ "node_id": node_id, "nodes": nodes })
         result = func(*args, **kwargs)
         node["value"] = -result[1]
+        #node["value"] = -result
 
         return result
 

@@ -24,6 +24,7 @@ def prioritize_legal_moves(board):
     legal_moves = board.legal_moves
 
     grouped_moves = groupby(legal_moves, compose_move_type(board))
+
     sorted_check_moves = sort_moves_by_value(board, grouped_moves['check'])
     sorted_capture_moves = sort_mvv_lva(board, grouped_moves['capture'])
     sorted_quiet_moves = sort_moves_by_value(board, grouped_moves['quiet'])
@@ -31,18 +32,22 @@ def prioritize_legal_moves(board):
     # nonquiet moves should be searched first, since they are most likely to increase value
     return sorted_check_moves + sorted_capture_moves + sorted_quiet_moves
 
+# TODO: add pawn promotions
 def get_moves_to_dequiet(board):
     if board.is_check():
         return prioritize_legal_moves(board)
 
     legal_moves = board.legal_moves
     
-    grouped_moves = groupby(legal_moves, compose_move_type(board))
+    capture_moves = filter(lambda move: board.is_capture(move), legal_moves)
+    #grouped_moves = groupby(legal_moves, compose_move_type(board))
 
-    sorted_check_moves = sort_moves_by_value(board, grouped_moves['check'])
-    sorted_capture_moves = sort_mvv_lva(board, grouped_moves['capture'])
+    #sorted_check_moves = sort_moves_by_value(board, grouped_moves['check'])
+    #sorted_capture_moves = sort_mvv_lva(board, grouped_moves['capture'])
+    sorted_capture_moves = sort_mvv_lva(board, capture_moves)
 
-    return sorted_check_moves + sorted_capture_moves
+    #return sorted_check_moves + sorted_capture_moves
+    return sorted_capture_moves
 
 # input list to split, function to group by
 def groupby(list_to_group, fn):

@@ -1,6 +1,6 @@
 import chess
 import numpy as np
-from evaluate import piece_values, get_position_value, color_multiplier
+from evaluate import piece_values, get_position_value, color_multiplier, evaluate_move_value
 
 def initialize_piece_count():
     return {
@@ -21,6 +21,7 @@ class Board(chess.Board):
     def __init__(self, *args):
         super(Board, self).__init__(*args)
         self.is_endgame = self.__is_endgame()
+        self.moves = 0
 
     def value(self):
         board_value = 0
@@ -39,6 +40,17 @@ class Board(chess.Board):
             board_value += value * color_multiplier[color]
 
         return board_value
+
+    def gives_checkmate(self, move):
+        self.push(move)
+        result = self.is_checkmate()
+        self.pop()
+        return result
+
+    def push(self, *args):
+        self.moves += 1
+        return super().push(*args)
+
 
     # For now, set the endgame status when the board is initialized (at the root of the search tree), and use that to calculate position values
     # is there a faster way to check this?

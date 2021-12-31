@@ -65,7 +65,7 @@ def command(board, depth, transposition_table, msg):
         return
 
     if msg == 'test':
-        searcher = Searcher(Board('r5rk/5p1p/5R2/4B3/8/8/7P/7K w'), depth, transposition_table)
+        searcher = Searcher(Board('r1bq1r1k/p1pnbpp1/1p2p3/6p1/3PB3/5N2/PPPQ1PPP/2KR3R w - -'), depth, transposition_table)
         move = searcher.next_move()
         print(f"{move}")
         return

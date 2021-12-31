@@ -123,9 +123,8 @@ def get_position_value(piece, color, square, is_endgame):
 # Assume the move is being evaluated before it's made
 # How should checks be valued?
 def evaluate_move_value(board, move):
-    # assume promotion will be queen
     if move.promotion is not None:
-        return piece_values[chess.QUEEN]
+        return piece_values[move.promotion]
 
     value = 0
 

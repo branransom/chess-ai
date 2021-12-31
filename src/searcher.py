@@ -31,8 +31,8 @@ class Searcher():
 
     # https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning_and_transposition_tables
     # only need to return best move at the top of the tree
-    @call_counter
-    @generate_move_tree
+    #@call_counter
+    #@generate_move_tree
     def negamax(self, board, depth, alpha, beta, root = True, pline = [], **kwargs):
         line = []
         best_move = None
@@ -61,7 +61,7 @@ class Searcher():
 
         if depth <= 0:
             color = board.turn
-            stand_pat = board.value() * color_multiplier[color]
+            stand_pat = board.value()
             if not board.is_check():
                 if stand_pat >= beta:
                     return ( best_move, beta )
@@ -143,7 +143,9 @@ class Searcher():
 
             self.depth += 1
 
+        print(f"{self.board.moves} moves searched")
         toc = time.perf_counter()
-        print(f"Searched {self.negamax.calls} moves, and found best move {self.best_move} with value: {self.best_move_value} in {toc - tic:0.4f} seconds")
+        #print(f"Searched {self.negamax.calls} moves, and found best move {self.best_move} with value: {self.best_move_value} in {toc - tic:0.4f} seconds")
+        print(f"Found best move {self.best_move} with value: {self.best_move_value} in {toc - tic:0.4f} seconds")
 
         return self.best_move

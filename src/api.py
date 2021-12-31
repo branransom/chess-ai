@@ -26,6 +26,8 @@ def next_move():
     data = request.json
     fen = data.get('fen')
 
+    print(fen)
+
     if fen is not None:
         board = Board(fen)
     else:
